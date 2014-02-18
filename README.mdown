@@ -1,0 +1,16 @@
+movie_scraper
+=============
+
+A python-coded web scraper. Works as follows:
+* Visits user specified ['Year in Film' wikipedia page](http://en.wikipedia.org/wiki/Category:Years_in_film)
+* Scrapes movie titles from tables
+* Uses the movie titles and Rotten Tomatoes' API to grab movie data.
+
+A few notes:
+------------
+
+I'd say I have a growing proficiency with Python, though it's by no means my best language ... yet. That said, I think some of the code could be written in a less clunky manner (someday). Also, users should note the following:
+* My script is based on scraping data from the [2012 year in film page](http://en.wikipedia.org/wiki/2012_in_film) and I've used it to successfully scrape 2007-2013 movie data. For other year's data, make sure the year you're interested in is formatted in a similar manner as the 2012 year in film.
+* I opted to skip movies for which I wasn't able to get complete movie data from. So for instance, if a movie did not have a DVD release date then I skipped it instead of writing a missing value.
+* The script outputs a csv **BUT** the data is actually tab-delimited.
+* Users should add their Rotten Tomatoe API key to the script. Visit [Rotten Tomatoes' developer page](http://developer.rottentomatoes.com/) to request an API key.

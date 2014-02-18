@@ -1,0 +1,113 @@
+import urllib2
+from unidecode import unidecode
+from bs4 import BeautifulSoup
+import json
+import csv
+import time
+
+apikey = ## PLACE ROTTEN TOMATOE API KEY (AS A STRING) HERE ##
+
+# Function to clean up characters from wikipedia movie titles
+def cleanUp(movie_title):
+	movie_title = movie_title.replace("'", "")
+	movie_title = movie_title.replace("&", "and")
+	movie_title = movie_title.replace(" ","+")
+	movie_title = movie_title.replace(":", "+")
+	movie_title = movie_title.replace('(film)', '')
+	movie_title = movie_title.replace('(' + str(year) + ' film)', '')
+	return movie_title
+
+# Function to visit Rotten Tomatoes API and grab movie's data
+def movieGrab(movie_title, key):
+	title = cleanUp(movie_title)
+	movie_url = "http://api.rottentomatoes.com/api/public/v1.0/movies.json?apikey=" + key + "&q=" + title + "&page_limit=1"
+	movie_page = urllib2.urlopen(movie_url)
+	movie_soup = BeautifulSoup(movie_page)
+	movie_data = movie_soup.get_text()
+	json_movie_data = json.loads(movie_data)
+	return json_movie_data
+
+# Function to visit Rotten Tomatoes API and grab movie's reviews
+def reviewGrab(movie_title, key):
+	review_url = "http://api.rottentomatoes.com/api/public/v1.0/movies/" + json_movie_data["movies"][0]["id"] + "/reviews.json?review_type=all&apikey=" + key
+	review_page = urllib2.urlopen(review_url)
+	review_soup = BeautifulSoup(review_page)
+	review_data = review_soup.get_text()
+	json_review_data = json.loads(review_data)	
+	return json_review_data
+
+# Years to scrape data from.
+# NOTE: Full list of years of film on wikipedia: 
+# http://en.wikipedia.org/wiki/Category:Years_in_film
+# NOTE: User should double-check that the year they're intrested
+# in scrapping matches the formatting used in 2012's year in film:
+# http://en.wikipedia.org/wiki/2012_in_film
+
+# years = [2012] # Single year
+years = [2007, 2008, 2009, 2010, 2011, 2012, 2013]
+
+
+# Create file and write header
+f = open('rotten_movies_dlx.csv', 'w')
+dataWriter = csv.writer(f, delimiter='\t', quotechar='"')
+dataWriter.writerow(["rotten_id", "title", "year", "mpaa_rating", "runtime", "release_theater", "release_dvd", "critics_rating", "critics_score", "audience_rating", "audience_score", "reviews_num"])
+
+# scrape scrape scrape ...
+# Visit wikipedia to scrape movie data:
+for year in years:
+	site = "http://www.wikipedia.org/wiki/" + str(year) + "_in_film"
+	page = urllib2.urlopen(site)
+	soup = BeautifulSoup(page)
+	table = soup.find_all("table", "wikitable") #, { "class" : "wikitable sortable" })
+	
+	# Grab 3rd through 6th table.
+	# NOTE: I broke this part up into 2 seperate cases to (1) deal with 
+	# formatting issues and (2) simplify the error handling process. For
+	# example, movies without dvd-release dates are skipped. Ideally, one
+	# could add 'missing-values' for these movies. I opted not to do so
+	# at this point and time.
+	for i in range(2, 6):
+		cells = table[i].find_all("td")
+		for row in cells:
+			if row.i != None and str(row.i.next_element)[0] != "<":
+				title = row.i.next_element
+				try:
+					time.sleep(0.25)
+					json_movie_data = movieGrab(title, apikey)
+					json_review_data = reviewGrab(title, apikey)		
+					dataWriter.writerow([json_movie_data["movies"][0]["id"],
+					json_movie_data["movies"][0]["title"],
+					json_movie_data["movies"][0]["year"],
+					json_movie_data["movies"][0]["mpaa_rating"],
+					json_movie_data["movies"][0]["runtime"],
+					json_movie_data["movies"][0]["release_dates"]["theater"],
+					json_movie_data["movies"][0]["release_dates"]["dvd"],
+					json_movie_data["movies"][0]["ratings"]["critics_score"],
+					json_movie_data["movies"][0]["ratings"]["critics_rating"],
+					json_movie_data["movies"][0]["ratings"]["audience_score"],
+					json_movie_data["movies"][0]["ratings"]["audience_rating"],
+					json_review_data["total"]])
+				except:
+					pass
+
+		for row in cells:
+			try:
+				title = row.i.a.get('title').replace(u'\xe9', 'e')
+				time.sleep(0.25)
+				json_movie_data = movieGrab(title, apikey)
+				json_review_data = reviewGrab(title, apikey)		
+				dataWriter.writerow([json_movie_data["movies"][0]["id"],
+				json_movie_data["movies"][0]["title"],
+				json_movie_data["movies"][0]["year"],
+				json_movie_data["movies"][0]["mpaa_rating"],
+				json_movie_data["movies"][0]["runtime"],
+				json_movie_data["movies"][0]["release_dates"]["theater"],
+				json_movie_data["movies"][0]["release_dates"]["dvd"],
+				json_movie_data["movies"][0]["ratings"]["critics_score"],
+				json_movie_data["movies"][0]["ratings"]["critics_rating"],
+				json_movie_data["movies"][0]["ratings"]["audience_score"],
+				json_movie_data["movies"][0]["ratings"]["audience_rating"],
+				json_review_data["total"]])
+			except:
+				pass
+f.close()
