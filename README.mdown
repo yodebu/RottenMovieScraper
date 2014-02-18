@@ -2,9 +2,15 @@ movie_scraper
 =============
 
 A python-coded web scraper. Works as follows:
-* Visits user specified ['Year in Film' wikipedia page](http://en.wikipedia.org/wiki/Category:Years_in_film)
-* Scrapes movie titles from tables
+* Visits user specified ['Year in Film' wikipedia page](http://en.wikipedia.org/wiki/Category:Years_in_film).
+* Scrapes movie titles from tables.
 * Uses the movie titles and Rotten Tomatoes' API to grab movie data.
+
+Contents
+--------
+
+* Python script.
+* 2007 - 2013 movie data.
 
 A few notes:
 ------------
